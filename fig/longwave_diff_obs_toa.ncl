@@ -1,38 +1,28 @@
 begin
 
-  dir      = "/storage/ytchen/co2_forcing_seasonal/"
-  datadir  = "/storage/ytchen/data/ERA5/"
-  outdir   = "/storage/ytchen/co2_forcing_seasonal/figure/"
-  filetime = "201207"
-  filename = "radflx_lw_clear/" + filetime + ".nc"
-  filerrtm = "output_lw_emis_merra2_land_"+filetime+"01.nc"; + filename + ".nc"
-  title    = filename
-  figname  = "LW_toa_obs_diff_emis_merra2_land_" + filetime
+  dir      = "/home/yanting/co2_forcing_seasonal/"
+  datadir  = "/home/yanting/co2_forcing_seasonal/data_beluga/"
+  outdir   = "/home/yanting/co2_forcing_seasonal/figure/"
+  filetime = "2012"
+  filename_toa = filetime + "_toa_lw.nc"
+  filerrtm_toa = filetime + "_ctrl_clear_era5emis.nc"; + filename + ".nc"
+
+  title    = filename_toa
+  figname  = "LW_toa_obs_diff_emis_era5_land_" + filetime + "_clear"
   figtype  = "pdf"
   
   panel_string = (/"ERA5","RRTM","RRTM - ERA5"/)
   
 ; add file
-  f1 = addfile(datadir + filename,"r")
-  f2 = addfile(dir + filerrtm,"r")
-;  f3 = addfile("./2xco2/" + filerrtm ,"r")
+  f1 = addfile(datadir + filename_toa,"r")
+  f2 = addfile(datadir + filerrtm_toa,"r")
 
   dlongrid = 1
   dlatgrid = 1
 
-;ssrc
-  fnt_obs   = f1->ttrc(0:23,::dlatgrid,::dlongrid)
-;printVarSummary(fnt_obs)
-  fnt_obs_flt = dim_avg_n_Wrap(short2flt(fnt_obs),0)/3600.
-printVarSummary(fnt_obs_flt)
-;  fnt_obs_flt = short2flt(fnt_obs)/3600.
-  fnt_1xco2 = f2->fnt_lw(0:23,0,::dlatgrid,::dlongrid)*(-1.)    ; note that the level coordinate is TOA to surface
-  fnt_1xco2:= dim_avg_n_Wrap(fnt_1xco2,0)
-;  fnt_lw_2xco2 = f3->fnt_lw(:,::10,::10) ;- f3->fnt_lw(0,::10,::10)
-
-  lon = f1->longitude(::dlongrid)
-  lat = f1->latitude(::dlatgrid)
-
+  fnt_obs   = f1->ttrc(:,::dlatgrid,::dlongrid)
+  fnt_obs_flt = dim_avg_n_Wrap(dble2flt(fnt_obs),0)/3600.
+  fnt_1xco2 = f2->toa_lw(:,::dlatgrid,::dlongrid)*(-1.)    ; note that the level coordinate is TOA to surface
 
   ; manually replace NaN with _FillValue
   if (any(isnan_ieee(fnt_1xco2))) then
@@ -42,14 +32,17 @@ printVarSummary(fnt_obs_flt)
     replace_ieeenan (fnt_1xco2, fnt_1xco2@_FillValue, 0)
   end if
 
+  fnt_1xco2:= dim_avg_n_Wrap(dble2flt(fnt_1xco2),0)
+;  fnt_lw_2xco2 = f3->fnt_lw(:,::10,::10) ;- f3->fnt_lw(0,::10,::10)
+
+  lon = f1->longitude(::dlongrid)
+  lat = f1->latitude(::dlatgrid)
+
   diff_fnt  = fnt_1xco2 - fnt_obs_flt
 printMinMax(diff_fnt,1)
   copy_VarCoords(fnt_obs(0,:,:),fnt_obs_flt) 
   copy_VarCoords(fnt_obs_flt,fnt_1xco2) 
   copy_VarCoords(fnt_obs_flt,diff_fnt)  
-
-; give attributes
-;  fnt_obs
 
 ; calculate global mean
   re             = 6.37122e06		; earth radius [m]
@@ -128,8 +121,8 @@ printMinMax(diff_fnt,1)
   delete(res2@cnFillPalette)
   res2@cnFillPalette = "ViBlGrWhYeOrRe";BlueWhiteOrangeRed"
   res2@cnLevelSelectionMode = "ManualLevels"
-  res2@cnMinLevelValF       = -20.
-  res2@cnMaxLevelValF       =  20.
+  res2@cnMinLevelValF       = -10.
+  res2@cnMaxLevelValF       =  10.
   res2@cnLevelSpacingF      =  1.
  
   plot(0) = gsn_csm_contour_map(wks,fnt_obs_flt,res0)

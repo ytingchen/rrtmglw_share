@@ -1,21 +1,19 @@
 begin
 
-  dir      = "/storage/ytchen/co2_forcing_seasonal/"
-  datadir  = "/storage/ytchen/data/ERA5/"
-  outdir   = "/storage/ytchen/co2_forcing_seasonal/figure/"
-  filetime = "201207"
-  filename = "radflx_lw_clear/" + filetime + ".nc"
-  filerrtm = "output_lw_emis_merra2_land_"+filetime+"01.nc"; + filename + ".nc"
-  title    = filename
-  figname  = "LW_sfc_obs_diff_emis_merra2_land_" + filetime
+  dir      = "/home/yanting/co2_forcing_seasonal/"
+  datadir  = "/home/yanting/co2_forcing_seasonal/data_beluga/"
+  outdir   = "/home/yanting/co2_forcing_seasonal/figure/"
+  filetime = "2012"
+  filename_sfc = filetime + "_sfc_lw.nc"
+  filerrtm_sfc = filetime + "_ctrl_clear_era5emis.nc"; + filename + ".nc"
+  title    = filename_sfc
+  figname  = "LW_sfc_obs_diff_emis_era5_land_" + filetime ;+ "_allsky"
   figtype  = "pdf"
   
   panel_string = (/"ERA5","RRTM","RRTM - ERA5"/)
   
 ; add file
-  f1 = addfile(datadir + filename,"r")
-  f2 = addfile(dir+filerrtm,"r")
-;  f3 = addfile("./2xco2/" + filerrtm ,"r")
+  f1 = addfile(datadir + filename_sfc,"r")
 
   dlongrid = 1 
   dlatgrid = 1 
@@ -23,10 +21,10 @@ begin
   lon = f1->longitude(::dlongrid)
   lat = f1->latitude(::dlatgrid)
 
-  fnt_obs   = f1->strc(0:23,::dlatgrid,::dlongrid)
-  fnt_obs_flt = dim_avg_n_Wrap(short2flt(fnt_obs),0)/3600.
+  fnt_obs   = f1->strc(:,::dlatgrid,::dlongrid)
+  fnt_obs_flt = dim_avg_n_Wrap(dble2flt(fnt_obs),0)/3600.
 
-  fnt_1xco2 = f2->sfc_fnt_lw(0:23,::dlatgrid,::dlongrid)*(-1.)
+  fnt_1xco2 = dble2flt(f2->sfc_fnt_lw(:,::dlatgrid,::dlongrid))*(-1.)
 
   ; manually replace NaN with _FillValue
   if (any(isnan_ieee(fnt_1xco2))) then
@@ -39,7 +37,7 @@ begin
   fnt_1xco2 := dim_avg_n(fnt_1xco2,0)
  
   diff_fnt  = fnt_1xco2 - fnt_obs_flt 
-printMinMax(diff_fnt,1)
+  printMinMax(diff_fnt,1)
 
   copy_VarCoords(fnt_obs(0,:,:),fnt_obs_flt) 
   copy_VarCoords(fnt_obs(0,:,:),fnt_1xco2) 
@@ -88,9 +86,9 @@ printMinMax(diff_fnt,1)
   res@gsnRightStringFontHeightF = res@gsnLeftStringFontHeightF 
 
   res@cnLevelSelectionMode = "ManualLevels"
-  res@cnMinLevelValF       = -280.
-  res@cnMaxLevelValF       =   0.
-  res@cnLevelSpacingF      =   20.
+  res@cnMinLevelValF       = -150.
+  res@cnMaxLevelValF       =  -20.
+  res@cnLevelSpacingF      =   10.
   ;res@cnFillPalette =  
 ;  res@cnLevelSelectionMode = "ManualLevels"
 ;  res@cnMinLevelValF       = -5.6
@@ -122,9 +120,9 @@ printMinMax(diff_fnt,1)
   delete(res2@cnFillPalette)
   res2@cnFillPalette = "ViBlGrWhYeOrRe"
   res2@cnLevelSelectionMode = "ManualLevels"
-  res2@cnMinLevelValF       = -40.
-  res2@cnMaxLevelValF       =  40.
-  res2@cnLevelSpacingF      =  4.
+  res2@cnMinLevelValF       = -10.
+  res2@cnMaxLevelValF       =  10.
+  res2@cnLevelSpacingF      =  1.
  
   plot(0) = gsn_csm_contour_map(wks,fnt_obs_flt,res0)
   plot(1) = gsn_csm_contour_map(wks,fnt_1xco2,res1)
