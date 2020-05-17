@@ -57,7 +57,7 @@ begin
   fnt_1xco2   = (fnt_1xco2_toa - fnt_1xco2_sfc) 
   diff_fnt    = (fnt_1xco2_toa - fnt_1xco2_sfc) - (fnt_obs_flt_toa - fnt_obs_flt_sfc)
 
-printMinMax(diff_fnt,1)
+  printMinMax(diff_fnt,1)
   copy_VarCoords(fnt_obs_toa(0,:,:),fnt_obs_flt) 
   copy_VarCoords(fnt_obs_flt,fnt_1xco2) 
   copy_VarCoords(fnt_obs_flt,diff_fnt)  
